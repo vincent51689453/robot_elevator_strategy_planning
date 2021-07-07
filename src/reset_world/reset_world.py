@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import rospy
-from std_srvs.srv import empty_cache
+from std_srvs.srv import Empty
 
 rospy.init_node('reset_world')
 
