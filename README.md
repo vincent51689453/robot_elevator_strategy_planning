@@ -35,3 +35,16 @@ export TURTLEBOT3_MODEL=burger
 roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 ```
 When you can control the turtlebot with keyboard, it means the basic installtion is correct.
+
+## Reinforcemnet Learning Simulation
+1. Launch elevator world
+```
+export TURTLEBOT3_MODEL=burger 
+./start_elevator_world.sh
+```
+
+2. Reset elevator world and randomly spawn robot
+```
+export TURTLEBOT3_MODEL=burger 
+./reset_elevator_world.sh
+```
