@@ -48,3 +48,5 @@ export TURTLEBOT3_MODEL=waffle
 export TURTLEBOT3_MODEL=waffle 
 ./reset_elevator_world.sh
 ```
+
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/elevator_world.JPG)
