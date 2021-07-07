@@ -22,16 +22,20 @@ catkin_make
 # Available model: burger / waffle / waffle_pi
 export TURTLEBOT3_MODEL=burger 
 ```
+4. Kinect V2 Installation
+```
+git clone https://github.com/wangxian4423/kinect_v2_udrf.git
+```
 
 ## Starting the gazebo world (basic)
 1. Empty world which only contain turtlebot
 ```
-export TURTLEBOT3_MODEL=burger 
+export TURTLEBOT3_MODEL=waffle
 roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
 ```
 2. Control turtlebot with keyboard
 ```
-export TURTLEBOT3_MODEL=burger 
+export TURTLEBOT3_MODEL=waffle 
 roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 ```
 When you can control the turtlebot with keyboard, it means the basic installtion is correct.
@@ -39,12 +43,12 @@ When you can control the turtlebot with keyboard, it means the basic installtion
 ## Reinforcemnet Learning Simulation
 1. Launch elevator world
 ```
-export TURTLEBOT3_MODEL=burger 
+export TURTLEBOT3_MODEL=waffle 
 ./start_elevator_world.sh
 ```
 
 2. Reset elevator world and randomly spawn robot and obstacles
 ```
-export TURTLEBOT3_MODEL=burger 
+export TURTLEBOT3_MODEL=waffle 
 ./reset_elevator_world.sh
 ```

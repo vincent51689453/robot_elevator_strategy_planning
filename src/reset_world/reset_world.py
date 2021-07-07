@@ -12,7 +12,7 @@ cross_sign = u'\u274c'.encode('utf8')
 # World Configuration
 # RED -> X GREEN -> Y BULE -> Z
 obstacles = ['cylinder','cylinder_clone','cylinder_clone_0','cylinder_clone_1']
-turtlebot = 'turtlebot3_burger'
+turtlebot = 'turtlebot3_waffle'
 turtlebot_init_pos = (0,1.0,0,0,0,0,0)
 cave_y_max = 1.55
 cave_y_min = 0.4
