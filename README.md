@@ -22,10 +22,6 @@ catkin_make
 # Available model: burger / waffle / waffle_pi
 export TURTLEBOT3_MODEL=burger 
 ```
-4. Kinect V2 Installation
-```
-git clone https://github.com/wangxian4423/kinect_v2_udrf.git
-```
 
 ## Starting the gazebo world (basic)
 1. Empty world which only contain turtlebot
