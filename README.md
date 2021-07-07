@@ -43,7 +43,7 @@ export TURTLEBOT3_MODEL=burger
 ./start_elevator_world.sh
 ```
 
-2. Reset elevator world and randomly spawn robot
+2. Reset elevator world and randomly spawn robot and obstacles
 ```
 export TURTLEBOT3_MODEL=burger 
 ./reset_elevator_world.sh
