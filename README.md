@@ -20,18 +20,18 @@ catkin_make
 3. Choose turtle bot model
 ```
 # Available model: burger / waffle / waffle_pi
-export TURTLEBOT3_MODEL = burger 
+export TURTLEBOT3_MODEL=burger 
 ```
 
 ## Starting the gazebo world (basic)
 1. Empty world which only contain turtlebot
 ```
-export TURTLEBOT3_MODEL = burger 
+export TURTLEBOT3_MODEL=burger 
 roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
 ```
 2. Control turtlebot with keyboard
 ```
-export TURTLEBOT3_MODEL = burger 
+export TURTLEBOT3_MODEL=burger 
 roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 ```
 When you can control the turtlebot with keyboard, it means the basic installtion is correct.
