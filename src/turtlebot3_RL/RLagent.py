@@ -57,6 +57,9 @@ class Agent():
             if len(self.memory)>BATCH_SIZE:
                 experience = self.memory.sample()
                 self.learn(experience, GAMMA)
+            else:
+                # You need to modify here if you change the action size by Vincent
+                self.memory = ReplayBuffer(5, BUFFER_SIZE,BATCH_SIZE,0)
                 
     def act(self, state, eps = 0):
         """Returns action for given state as per current policy
@@ -95,7 +98,6 @@ class Agent():
         self.qnetwork_target.eval()
         #shape of output from the model (batch_size,action_dim) = (64,4)
         predicted_targets = self.qnetwork_local(states).gather(1,actions)
-    
         with torch.no_grad():
             labels_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
 

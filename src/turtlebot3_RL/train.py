@@ -54,7 +54,7 @@ eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
 scores (integer): list containing score from each epoch
 """
 max_epoch = 200
-max_dt = 50
+max_dt = 20
 move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
@@ -110,6 +110,7 @@ def main():
     # Start training
     i = 1
     t = 0
+    total_reward = 0
     while(i<max_epoch):
         if(depth_display_image is not None):
             print("")
@@ -126,7 +127,7 @@ def main():
 
                     # Select an action
                     action = robot.act(state,eps)
-                    print("Agent chosen action: " + action_list[action])
+                    #print("Agent chosen action: " + action_list[action])
                     RL_mode = 1
                 # Next state
                 else:
@@ -139,19 +140,18 @@ def main():
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment
                     reward = environment.perform(action,0.5,0.5,dt=1000)
-
-                    print("Reward at t:{}= {}".format(str(t),str(reward)))
+                    #print("Reward at t->{}= {}".format(str(t),str(reward)))
+                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t),str(max_dt),action_list[action],str(reward)))
                     eps = max(eps*eps_decay,eps_end)
 
                     # Save experience
                     robot.step(state,action,reward,next_state,True)
                     RL_mode = 0
-                t += 1
+                    t += 1
 
             environment.reset_env()
             time.sleep(1)
             t = 0
-
             i += 1
            
             # Visualization in new window

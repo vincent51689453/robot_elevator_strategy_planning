@@ -9,6 +9,7 @@ from gazebo_msgs.srv import *
 import random
 import math
 import numpy as np
+from datetime import datetime
 
 tick_sign = u'\u2714'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
@@ -65,6 +66,11 @@ def quaternion_to_euler(q):
 # Generate random position for an obstacle
 def shuffle_pos():
     x, y, z = 0, 0, 0
+    global cave_x_max,cave_x_min
+    global cave_y_max,cave_y_min
+    mils = int(str(datetime.now())[20:])
+    #print(mils)
+    random.seed(mils)
     x = random.uniform(cave_x_min,cave_x_max)
     y = random.uniform(cave_y_min,cave_y_max)
     z = cave_z
@@ -78,6 +84,9 @@ def reset_env():
     reset_world()
     print("The world is reset ... " + tick_sign)
 
+    global objects
+    objects = []
+    seed_i = 0
     # Rearrnage obstacles in the cave
     for i in range(0,len(obstacles)):
         # Generate random locations
@@ -94,8 +103,9 @@ def reset_env():
         state_msg.pose.orientation.z = 0
         state_msg.pose.orientation.w = 0
         rospy.wait_for_service('/gazebo/set_model_state')
-        global objects
         objects.append((x,y,z))
+        #print(state_msg)
+        #print("object:{} x:{} y:{} z:{}".format(obstacles[i],x,y,z))
         try:
             set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
             resp = set_state(state_msg)
@@ -180,7 +190,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000):
     d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
     d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
     d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
-    r = 1/d_cave*100 - (d_obj1+d_obj2+d_obj3+d_obj4)*0.01
+    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*10
     return r
 
 
