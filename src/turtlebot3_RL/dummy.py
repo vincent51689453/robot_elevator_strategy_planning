@@ -70,13 +70,13 @@ def depth_callback(ros_msg):
     try:
         # The depth image is a single-channel float32 image
         depth_image = bridge.imgmsg_to_cv2(ros_msg, "32FC1")
+        print(depth_image.shape)
     except CvBridgeError, e:
         print e
     # Convert the depth image to a Numpy array since most cv2 functions
     # require Numpy arrays.
     depth_array = np.array(depth_image, dtype=np.float32)
     marker_z = depth_image[marker[1],marker[0]]
-    print(marker_z)
     # Normalize the depth image to fall between 0 (black) and 1 (white)
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
@@ -117,46 +117,8 @@ def main():
     total_reward = 0
     while(i<max_epoch):
         if(depth_display_image is not None):
-            print("")
-            print("#### Epoch: " + str(i)+ " ####")
-            while (t==max_dt):
-                # Current state
-                if(RL_mode==0):
-                    #print("Mode: Current state -> Choosing Action")
-                    # Set state as depth image observation (current state)
-                    depth_display_image = cv2.resize(depth_display_image,(720,480))
-                    image_tensor = transformer(depth_display_image)
-                    state = Variable(image_tensor).cuda()  
-                    state = torch.unsqueeze(image_tensor,0)
-
-                    # Select an action
-                    action = robot.act(state,eps)
-                    #print("Agent chosen action: " + action_list[action])
-                    RL_mode = 1
-                # Next state
-                else:
-                    # Set state as depth image observation (next state)
-                    depth_display_image = cv2.resize(depth_display_image,(720,480))
-                    image_tensor = transformer(depth_display_image)
-                    next_state = Variable(image_tensor).cuda()  
-                    next_state = torch.unsqueeze(image_tensor,0)
-
-                    #print("Mode: Next state -> Performing Action")
-                    # Apply to the environment
-                    reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=marker_z)
-                    #print("Reward at t->{}= {}".format(str(t),str(reward)))
-                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t),str(max_dt),action_list[action],str(reward)))
-                    eps = max(eps*eps_decay,eps_end)
-
-                    # Save experience
-                    robot.step(state,action,reward,next_state,True)
-                    RL_mode = 0
-                    t += 1
-
-            #environment.reset_env()
-            #time.sleep(1)
-            t = 0
-            i += 1
+            global marker_z
+            print("Depth:",marker_z)
            
             # Visualization in new window
             #depth_display_image = cv2.resize(depth_display_image,(720,480))

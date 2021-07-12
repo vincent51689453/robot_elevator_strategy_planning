@@ -134,7 +134,7 @@ def reset_env():
         print("Render " + turtlebot + " failed ... " + cross_sign)
 
 # Apply chosen action to the gazebo world
-def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000):
+def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,mark_depth=0):
     global objects
     t = 0
     # ROS Publisher (/cmd_vel)
@@ -190,7 +190,11 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000):
     d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
     d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
     d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
-    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*10
+    # Depth marker monitoring
+    punishment = 0
+    if (np.isnan(marker_z)):
+        punishment = -9999
+    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*10 + punishment
     return r
 
 
