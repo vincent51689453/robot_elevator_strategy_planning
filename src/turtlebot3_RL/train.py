@@ -76,7 +76,6 @@ def depth_callback(ros_msg):
     # require Numpy arrays.
     depth_array = np.array(depth_image, dtype=np.float32)
     marker_z = depth_image[marker[1],marker[0]]
-    print(marker_z)
     # Normalize the depth image to fall between 0 (black) and 1 (white)
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
@@ -87,7 +86,7 @@ def process_depth_image(frame):
     return frame
 
 def main():
-    global depth_display_image,bridge,scores
+    global depth_display_image,bridge,scores,marker_z
 
     # Subscribe depth image
     rospy.Subscriber(depth_image_topic,Image,callback=depth_callback)
@@ -153,8 +152,8 @@ def main():
                     RL_mode = 0
                     t += 1
 
-            #environment.reset_env()
-            #time.sleep(1)
+            environment.reset_env()
+            time.sleep(1)
             t = 0
             i += 1
            
