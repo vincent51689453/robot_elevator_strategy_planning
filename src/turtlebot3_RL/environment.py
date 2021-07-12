@@ -1,10 +1,11 @@
 #! /usr/bin/env python
+from __future__ import division
 import rospy
 import rospkg 
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Twist
-from gazebo_msgs.srv import SetModelState
+from gazebo_msgs.srv import *
 import random
 import math
 import numpy as np
@@ -23,6 +24,19 @@ cave_y_min = 0.4
 cave_x_max = -1.4
 cave_x_min = -2.4
 cave_z = 0.164
+objects = []
+
+# Get turtle bot pose
+def where_is_it(object_name):
+    get_state_service = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+    model = GetModelStateRequest()
+    model.model_name = object_name
+    objstate = get_state_service(model)
+    x = objstate.pose.position.x
+    y = objstate.pose.position.y
+    z = objstate.pose.position.z
+    return x,y,z
+
 
 # Euler Quaternian Conversion
 def euler_to_quaternion(r):
@@ -80,10 +94,12 @@ def reset_env():
         state_msg.pose.orientation.z = 0
         state_msg.pose.orientation.w = 0
         rospy.wait_for_service('/gazebo/set_model_state')
+        global objects
+        objects.append((x,y,z))
         try:
             set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
             resp = set_state(state_msg)
-            print("Render " + obstacles[i] + " done ... " + tick_sign)
+            #print("Render " + obstacles[i] + " done ... " + tick_sign)
         except rospy.ServiceException, e:
             print("Render " + obstacles[i] + " failed ... " + cross_sign)
 
@@ -108,10 +124,12 @@ def reset_env():
         print("Render " + turtlebot + " failed ... " + cross_sign)
 
 # Apply chosen action to the gazebo world
-def perform(action,basic_power=0.5,turn_power=0.5):
-    # ROS Publisher
+def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000):
+    global objects
+    t = 0
+    # ROS Publisher (/cmd_vel)
     velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-    vel_msg = Twist()    
+    speed_msg = Twist()    
     if (action == 0):
         speed_msg.linear.x = basic_power
         speed_msg.linear.y = 0
@@ -125,14 +143,14 @@ def perform(action,basic_power=0.5,turn_power=0.5):
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
-        speed_msg.angular.z = -turn_power
+        speed_msg.angular.z = turn_power
     elif (action == 2):
         speed_msg.linear.x = 0
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
-        speed_msg.angular.z = turn_power   
+        speed_msg.angular.z = -turn_power   
     elif (action == 3):     
         speed_msg.linear.x = -basic_power
         speed_msg.linear.y = 0
@@ -147,4 +165,22 @@ def perform(action,basic_power=0.5,turn_power=0.5):
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0    
-    ros_publisher.publish(speed_msg)        
+    while(t<dt):
+        # Keep doing until dt
+        velocity_publisher.publish(speed_msg)     
+        t += 1
+
+    #Reward function
+    # Get turtle bot position
+    robot_x,robot_y,robot_z = where_is_it(turtlebot) 
+    cave_mid_x = cave_x_max+cave_x_min/2
+    cave_mid_y = cave_y_max+cave_y_min/2
+    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5
+    d_obj1 = ((cave_mid_x-objects[0][0])**2+(cave_mid_y-objects[0][1])**2)**0.5
+    d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
+    d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
+    d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
+    r = 1/d_cave*100 - (d_obj1+d_obj2+d_obj3+d_obj4)*0.01
+    return r
+
+

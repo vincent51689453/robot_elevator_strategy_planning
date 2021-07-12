@@ -47,16 +47,18 @@ cross_sign = u'\u274c'.encode('utf8')
 DQN Hyperparameters
 max_epoch (int): maximum number of training epsiodes
 max_dt (int): maximum number of timesteps per episode
+move_dt(int): maximum number of timesteps per action
 eps_start (float): starting value of epsilon, for epsilon-greedy action selection
 eps_end (float): minimum value of epsilon 
 eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
 scores (integer): list containing score from each epoch
 """
 max_epoch = 200
-max_dt = 1000
+max_dt = 50
+move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
-deps_decay=0.996
+eps_decay=0.996
 action_list = ['Forward','Left','Right','Backward','Stop']
 
 def depth_callback(ros_msg):
@@ -95,33 +97,68 @@ def main():
 
 
     # Training initilization
+    # Reset the world
+    environment.reset_env()
+    time.sleep(1)
+    reward = 0
     scores = []
     eps = eps_start
     transformer = transforms.ToTensor()
+    # 0 for current state and 1 for next state
+    RL_mode = 0
 
     # Start training
-    for i in range(1,max_epoch):
+    i = 1
+    t = 0
+    while(i<max_epoch):
         if(depth_display_image is not None):
             print("")
             print("#### Epoch: " + str(i)+ " ####")
-            # Reset the world
+            while (t<max_dt):
+                # Current state
+                if(RL_mode==0):
+                    #print("Mode: Current state -> Choosing Action")
+                    # Set state as depth image observation (current state)
+                    depth_display_image = cv2.resize(depth_display_image,(720,480))
+                    image_tensor = transformer(depth_display_image)
+                    state = Variable(image_tensor).cuda()  
+                    state = torch.unsqueeze(image_tensor,0)
+
+                    # Select an action
+                    action = robot.act(state,eps)
+                    print("Agent chosen action: " + action_list[action])
+                    RL_mode = 1
+                # Next state
+                else:
+                    # Set state as depth image observation (next state)
+                    depth_display_image = cv2.resize(depth_display_image,(720,480))
+                    image_tensor = transformer(depth_display_image)
+                    next_state = Variable(image_tensor).cuda()  
+                    next_state = torch.unsqueeze(image_tensor,0)
+
+                    #print("Mode: Next state -> Performing Action")
+                    # Apply to the environment
+                    reward = environment.perform(action,0.5,0.5,dt=1000)
+
+                    print("Reward at t:{}= {}".format(str(t),str(reward)))
+                    eps = max(eps*eps_decay,eps_end)
+
+                    # Save experience
+                    robot.step(state,action,reward,next_state,True)
+                    RL_mode = 0
+                t += 1
+
             environment.reset_env()
             time.sleep(1)
+            t = 0
 
-            # Set state as depth image observation
-            depth_display_image = cv2.resize(depth_display_image,(720,480))
-            image_tensor = transformer(depth_display_image)
-            state = Variable(image_tensor).cuda()  
-            state = torch.unsqueeze(image_tensor,0)
-
-            # Select an action
-            action = robot.act(state,eps)
-            print("Agent chosen action: " + action_list[action])
+            i += 1
            
             # Visualization in new window
-            cv2.imshow("Depth image",depth_display_image)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            #depth_display_image = cv2.resize(depth_display_image,(720,480))
+            #cv2.imshow("Depth image",depth_display_image)
+            #if cv2.waitKey(1) & 0xFF == ord('q'):
+            #    break
 
 if __name__ == '__main__':
     rospy.init_node(node_name)
