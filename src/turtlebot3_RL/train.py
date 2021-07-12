@@ -118,7 +118,7 @@ def main():
         if(depth_display_image is not None):
             print("")
             print("#### Epoch: " + str(i)+ " ####")
-            while (t==max_dt):
+            while (t<max_dt):
                 # Current state
                 if(RL_mode==0):
                     #print("Mode: Current state -> Choosing Action")
