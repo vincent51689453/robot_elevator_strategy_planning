@@ -42,8 +42,10 @@ depth_display_image = None
 bridge = CvBridge()
 tick_sign = u'\u2714'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
-marker = (1920/2, 1080/2)
-marker_z = 0
+marker1 = (1920/2, 1080/2)
+marker2 = (1920/2-500, 1080/2)
+marker3 = (0+500, 1080/2)
+markers_z = []
 
 """
 DQN Hyperparameters
@@ -61,7 +63,7 @@ move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
 eps_decay=0.996
-action_list = ['Forward','Left','Right','Backward','Stop']
+action_list = ['Forward','Left','Right','Stop','Backward']
 
 def depth_callback(ros_msg):
     # Depth image callback
@@ -75,7 +77,12 @@ def depth_callback(ros_msg):
     # Convert the depth image to a Numpy array since most cv2 functions
     # require Numpy arrays.
     depth_array = np.array(depth_image, dtype=np.float32)
-    marker_z = depth_image[marker[1],marker[0]]
+    d1 = depth_image[marker1[1],marker1[0]]
+    d2 = depth_image[marker2[1],marker2[0]]
+    d3 = depth_image[marker3[1],marker3[0]]
+    markers_z.append(d1)
+    markers_z.append(d2)
+    markers_z.append(d3)
     # Normalize the depth image to fall between 0 (black) and 1 (white)
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
@@ -142,7 +149,7 @@ def main():
 
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment
-                    reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=marker_z)
+                    reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=markers_z)
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t),str(max_dt),action_list[action],str(reward)))
                     eps = max(eps*eps_decay,eps_end)

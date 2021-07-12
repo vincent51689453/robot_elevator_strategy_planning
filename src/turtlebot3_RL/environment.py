@@ -134,7 +134,7 @@ def reset_env():
         print("Render " + turtlebot + " failed ... " + cross_sign)
 
 # Apply chosen action to the gazebo world
-def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,mark_depth=0):
+def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,mark_depth=None):
     global objects
     t = 0
     # ROS Publisher (/cmd_vel)
@@ -162,14 +162,14 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
         speed_msg.angular.y = 0
         speed_msg.angular.z = -turn_power   
     elif (action == 3):     
-        speed_msg.linear.x = -basic_power
+        speed_msg.linear.x = 0
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0    
     else:
-        speed_msg.linear.x = 0
+        speed_msg.linear.x = -basic_power
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
@@ -192,8 +192,10 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
     # Depth marker monitoring
     punishment = 0
-    if (np.isnan(marker_z)):
+    if (((np.isnan(mark_depth[0]))or(np.isnan(mark_depth[1]))or(np.isnan(mark_depth[2]))) and (action!=3)):
         punishment = -9999
+    if (((np.isnan(mark_depth[0]))or(np.isnan(mark_depth[1]))or(np.isnan(mark_depth[2]))) and (action==3)):
+        punishment = 9999
     r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*10 + punishment
     return r
 
