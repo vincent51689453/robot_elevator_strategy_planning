@@ -72,7 +72,7 @@ class Agent():
         self.qnetwork_local.eval()
         with torch.no_grad():
             action_values = self.qnetwork_local(state)
-            print("action-vector:",action_values)
+            print("action-tensor:",action_values)
         self.qnetwork_local.train()
 
         #Epsilon -greedy action selction

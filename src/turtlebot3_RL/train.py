@@ -63,7 +63,7 @@ max_dt = 20
 move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
-eps_decay = 0.95
+eps_decay = 0.996
 action_list = ['Forward','Left','Right','Stop','Backward']
 
 def depth_callback(ros_msg):
@@ -170,8 +170,8 @@ def main():
                     robot.step(state,action,reward,next_state,True)
                     RL_mode = 0
                     t += 1
-            # Decay after a epoch
-            eps = max(eps*eps_decay,eps_end)
+                    # Decrease epsilon
+                    eps = max(eps*eps_decay,eps_end)
             environment.reset_env()
             time.sleep(1)
             t = 0
