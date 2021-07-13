@@ -69,7 +69,7 @@ def shuffle_pos():
     global cave_x_max,cave_x_min
     global cave_y_max,cave_y_min
     mils = int(str(datetime.now())[20:])
-    #random.seed(mils)
+    random.seed(mils)
     x = random.uniform(cave_x_min,cave_x_max)
     y = random.uniform(cave_y_min,cave_y_max)
     z = cave_z
