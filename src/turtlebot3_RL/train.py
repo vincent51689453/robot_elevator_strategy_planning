@@ -163,7 +163,7 @@ def main():
                     # Apply to the environment
                     reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=markers_z)
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
-                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t),str(max_dt),action_list[action],str(reward)))
+                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
                     
 
                     # Save experience

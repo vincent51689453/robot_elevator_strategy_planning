@@ -72,13 +72,12 @@ class Agent():
         self.qnetwork_local.eval()
         with torch.no_grad():
             action_values = self.qnetwork_local(state)
-            print("action-tensor:",action_values)
         self.qnetwork_local.train()
 
         #Epsilon -greedy action selction
         sample = random.random()
         if sample > eps:
-            print("[Q-Network]")
+            print("[Q-Network] -> Action-Tensor:",action_values)
             return np.argmax(action_values.cpu().data.numpy())
         else:
             print("[Random]")
