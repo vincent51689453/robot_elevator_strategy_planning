@@ -1,20 +1,26 @@
 import numpy as np
 import random 
 from collections import namedtuple, deque 
+from datetime import datetime
 
 import torch
+from torch import nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torchvision import transforms
+from torch.autograd import Variable
 
 from DQN import QNetwork
 
 BUFFER_SIZE = int(1e5)  #replay buffer size
-BATCH_SIZE = 128         # minibatch size was 64
+BATCH_SIZE = 8         # minibatch size was 64
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR = 5e-4               # learning rate
+LR = 0.01               # learning rate was 5e-4
 UPDATE_EVERY = 4        # how often to update the network
 
+tick_sign = u'\u2713'.encode('utf8')
+cross_sign = u'\u274c'.encode('utf8')
 
 class Agent():
     """Interacts with and learns form environment."""
@@ -37,6 +43,10 @@ class Agent():
         #Q- Network
         self.qnetwork_local = QNetwork(state_size, action_size, seed)
         self.qnetwork_target = QNetwork(state_size, action_size, seed)
+
+        # Add CUDA support
+        self.qnetwork_local = self.qnetwork_local.cuda()
+        self.qnetwork_target = self.qnetwork_target.cuda()
         
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(),lr=LR)
         
@@ -57,9 +67,13 @@ class Agent():
             if len(self.memory)>BATCH_SIZE:
                 experience = self.memory.sample()
                 self.learn(experience, GAMMA)
+            """    
             else:
-                # You need to modify here if you change the action size by Vincent
-                self.memory = ReplayBuffer(5, BUFFER_SIZE,BATCH_SIZE,0)
+                # NO USE NOW
+                mils = int(str(datetime.now())[20:])
+                self.memory = ReplayBuffer(5, BUFFER_SIZE,BATCH_SIZE,mils)
+                #self.memory = []
+            """
                 
     def act(self, state, eps = 0):
         """Returns action for given state as per current policy
@@ -90,16 +104,22 @@ class Agent():
             experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
             gamma (float): discount factor
         """
-        states, actions, rewards, next_state, dones = experiences
+        # Transform input with CUDA support
+        states, actions, rewards, next_states, dones = experiences
+
         ## TODO: compute and minimize the loss
         criterion = torch.nn.MSELoss()
         # Local model is one which we need to train so it's in training mode
+
         self.qnetwork_local.train()
         # Target model is one with which we need to get our target so it's in evaluation mode
         # So that when we do a forward pass with target model it does not calculate gradient.
         # We will update target model weights with soft_update function
         self.qnetwork_target.eval()
         #shape of output from the model (batch_size,action_dim) = (64,4)
+        # Convert CPU tensor to GPU tensor
+        states = Variable(states).cuda()
+        next_states = Variable(next_states).cuda()
         predicted_targets = self.qnetwork_local(states).gather(1,actions)
         with torch.no_grad():
             labels_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
@@ -114,6 +134,7 @@ class Agent():
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local,self.qnetwork_target,TAU)
+        print("Passing experiences to GPU ..." + tick_sign)
             
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -159,13 +180,15 @@ class ReplayBuffer:
         
     def sample(self):
         """Randomly sample a batch of experiences from memory"""
+        # .detach().to("cpu").numpy() helps to convert GPU tensor to CPU tensor
+        # state and next_state are converted to GPU tensor
         experiences = random.sample(self.memory,k=self.batch_size)
-        
-        states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().cuda()
-        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().cuda()
-        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().cuda()
-        next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().cuda()
-        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().cuda()
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        states = torch.from_numpy(np.vstack([e.state.detach().to("cpu").numpy() for e in experiences if e is not None])).float()
+        actions = torch.from_numpy(np.vstack([e.action for e in experiences if e is not None])).long().to(device)
+        rewards = torch.from_numpy(np.vstack([e.reward for e in experiences if e is not None])).float().to(device)
+        next_states = torch.from_numpy(np.vstack([e.next_state.detach().to("cpu").numpy() for e in experiences if e is not None])).float().to(device)
+        dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
         
         return (states,actions,rewards,next_states,dones)
     def __len__(self):

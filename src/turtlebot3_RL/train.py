@@ -44,12 +44,12 @@ reward_topic = '/RL/reward'
 
 # Variables
 depth_display_image = None
-tick_sign = u'\u2714'.encode('utf8')
+tick_sign = u'\u2713'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
 # Safety depth marker
-marker1 = (int(1920/2), int(1080/2))
-marker2 = (int(1920/2)-100, int(1080/2))
-marker3 = (int(1920/2)+100, int(1080/2))
+marker1 = (int(740/2), int(480/2))
+marker2 = (int(740/2)-50, int(480/2))
+marker3 = (int(740/2)+50, int(480/2))
 markers_z = []
 
 """
@@ -80,8 +80,9 @@ def depth_callback(ros_msg):
     try:
         # The depth image is a single-channel float32 image
         depth_image = bridge.imgmsg_to_cv2(ros_msg, "passthrough")
+        depth_image = cv2.resize(depth_image,(720,480))
     except CvBridgeError, e:
-        print e
+        print ("Error:",e)
     # Convert the depth image to a Numpy array since most cv2 functions
     # require Numpy arrays.
     depth_array = np.array(depth_image, dtype=np.float32)
@@ -95,6 +96,7 @@ def depth_callback(ros_msg):
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
     depth_display_image = nan_recover(depth_array)
+
 
 # Replace all NAN by 0
 def nan_recover(frame):
@@ -124,7 +126,7 @@ def main():
     # State: Depth image
     mils = int(str(datetime.now())[20:])
     robot = RLagent.Agent(state_size=1,action_size=5,seed=mils)
-    print("Reinforcement Agent setup ... " + tick_sign)
+    print("Reinforcement agent setup ... " + tick_sign)
 
 
     # Training initilization
@@ -154,7 +156,7 @@ def main():
                     #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     state = Variable(image_tensor).cuda()  
-                    state = torch.unsqueeze(image_tensor,0)
+                    state = torch.unsqueeze(state,0)
 
                     # Select an action
                     action = robot.act(state,eps)
@@ -166,18 +168,18 @@ def main():
                     #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     next_state = Variable(image_tensor).cuda()  
-                    next_state = torch.unsqueeze(image_tensor,0)
+                    next_state = torch.unsqueeze(next_state,0)
 
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment
-                    reward = environment.perform(action,0.5,0.5,dt=2000,mark_depth=markers_z)
+                    reward,complete = environment.perform(action,0.5,0.5,dt=2000,mark_depth=markers_z)
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
                     # Visualize in rqt_plot
                     reward_curve.publish(reward)
 
                     # Save experience
-                    robot.step(state,action,reward,next_state,True)
+                    robot.step(state,action,reward,next_state,complete)
                     RL_mode = 0
                     t += 1
                     # Decrease epsilon

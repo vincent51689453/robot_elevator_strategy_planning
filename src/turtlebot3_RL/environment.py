@@ -135,6 +135,7 @@ def reset_env():
 # Apply chosen action to the gazebo world
 def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,mark_depth=None):
     global objects
+    task_complete = False
     t = 0
     # ROS Publisher (/cmd_vel)
     velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -196,6 +197,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     if (inside_x and inside_y):
         if(action == 3):
             bonus = 1000
+            task_complete = True
     else:
         if(action == 3):
             bonus = -1000
@@ -203,6 +205,6 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
     #    punishment = -9999
     r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*1 + bonus
-    return r
+    return r,task_complete
 
 
