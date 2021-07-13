@@ -54,4 +54,4 @@ export TURTLEBOT3_MODEL=waffle
 ./train_elevator.sh
 ```
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/elevator_world.JPG)
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/elevator_world_2.JPG)
