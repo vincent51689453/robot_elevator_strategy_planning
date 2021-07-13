@@ -4,14 +4,16 @@ Robot Control
 0 - Forward
 1 - Left
 2 - Right
-3 - Backward
-4 - Stop
+3 - Stop
+4 - Backward
 """
 #System Packages
+from __future__ import division
 import sys
 import os
 import cv2
 import numpy as np
+import numpy.ma as ma
 import time
 
 #ROS Packages
@@ -37,14 +39,13 @@ node_name = 'RL_Controller'
 depth_image_topic = '/camera/depth/image_raw'
 
 # Variables
-depth_image = None
 depth_display_image = None
-bridge = CvBridge()
 tick_sign = u'\u2714'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
-marker1 = (1920/2, 1080/2)
-marker2 = (1920/2-500, 1080/2)
-marker3 = (0+500, 1080/2)
+# Safety depth marker
+marker1 = (int(1920/2), int(1080/2))
+marker2 = (int(1920/2)-100, int(1080/2))
+marker3 = (int(1920/2)+100, int(1080/2))
 markers_z = []
 
 """
@@ -62,16 +63,19 @@ max_dt = 20
 move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
-eps_decay=0.996
+eps_decay = 0.95
 action_list = ['Forward','Left','Right','Stop','Backward']
 
 def depth_callback(ros_msg):
     # Depth image callback
-    global depth_image,bridge,depth_display_image,marker_z
+    global depth_display_image,marker_z
+
+    bridge = CvBridge()
+    depth_image = None
     # Use cv_bridge() to convert the ROS image to OpenCV format
     try:
         # The depth image is a single-channel float32 image
-        depth_image = bridge.imgmsg_to_cv2(ros_msg, "32FC1")
+        depth_image = bridge.imgmsg_to_cv2(ros_msg, "passthrough")
     except CvBridgeError, e:
         print e
     # Convert the depth image to a Numpy array since most cv2 functions
@@ -86,17 +90,25 @@ def depth_callback(ros_msg):
     # Normalize the depth image to fall between 0 (black) and 1 (white)
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
-    depth_display_image = process_depth_image(depth_array)
+    depth_display_image = nan_recover(depth_array)
 
-def process_depth_image(frame):
-    # Just return the raw image for this demo
+# Replace all NAN by 0
+def nan_recover(frame):
+    # NAN removeal
+    # Search NAN by height (y)
+    for i in range(0,frame.shape[0]):
+        # Search NAN by width (x)
+        for j in range(0,frame.shape[1]):
+            # Matrix(y,x)
+            if np.isnan(frame[i,j]):
+                frame[i,j] = 0
     return frame
 
 def main():
-    global depth_display_image,bridge,scores,marker_z
+    global depth_display_image,scores,markers_z
 
     # Subscribe depth image
-    rospy.Subscriber(depth_image_topic,Image,callback=depth_callback)
+    rospy.Subscriber(depth_image_topic,Image,callback=depth_callback, queue_size=1)
     print("Depth image subscriber ... " + tick_sign)
 
     # Setup RL agent
@@ -130,7 +142,7 @@ def main():
                 if(RL_mode==0):
                     #print("Mode: Current state -> Choosing Action")
                     # Set state as depth image observation (current state)
-                    depth_display_image = cv2.resize(depth_display_image,(720,480))
+                    #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     state = Variable(image_tensor).cuda()  
                     state = torch.unsqueeze(image_tensor,0)
@@ -142,7 +154,7 @@ def main():
                 # Next state
                 else:
                     # Set state as depth image observation (next state)
-                    depth_display_image = cv2.resize(depth_display_image,(720,480))
+                    #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     next_state = Variable(image_tensor).cuda()  
                     next_state = torch.unsqueeze(image_tensor,0)
@@ -152,13 +164,14 @@ def main():
                     reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=markers_z)
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t),str(max_dt),action_list[action],str(reward)))
-                    eps = max(eps*eps_decay,eps_end)
+                    
 
                     # Save experience
                     robot.step(state,action,reward,next_state,True)
                     RL_mode = 0
                     t += 1
-
+            # Decay after a epoch
+            eps = max(eps*eps_decay,eps_end)
             environment.reset_env()
             time.sleep(1)
             t = 0
