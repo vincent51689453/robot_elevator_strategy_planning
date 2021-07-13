@@ -15,6 +15,8 @@ import cv2
 import numpy as np
 import numpy.ma as ma
 import time
+from datetime import datetime
+
 
 #ROS Packages
 import rospy
@@ -22,6 +24,7 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import CameraInfo
 from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge, CvBridgeError
+from std_msgs.msg import Float32
 
 #Pytorch Packages
 import torch
@@ -37,6 +40,7 @@ import DQN
 # ROS Topic
 node_name = 'RL_Controller'
 depth_image_topic = '/camera/depth/image_raw'
+reward_topic = '/RL/reward'
 
 # Variables
 depth_display_image = None
@@ -59,7 +63,7 @@ eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
 scores (integer): list containing score from each epoch
 """
 max_epoch = 200
-max_dt = 20
+max_dt = 16 # was20
 move_dt = 2000
 eps_start = 1.0
 eps_end = 0.01
@@ -111,10 +115,15 @@ def main():
     rospy.Subscriber(depth_image_topic,Image,callback=depth_callback, queue_size=1)
     print("Depth image subscriber ... " + tick_sign)
 
+    # Publisher of rqt_plot
+    reward_curve = rospy.Publisher(reward_topic, Float32, queue_size=1)
+    reward_curve_rate = rospy.Rate(1)
+    
     # Setup RL agent
     # Action: Forward/Left/Right/Backward/Stop
     # State: Depth image
-    robot = RLagent.Agent(state_size=1,action_size=5,seed=0)
+    mils = int(str(datetime.now())[20:])
+    robot = RLagent.Agent(state_size=1,action_size=5,seed=mils)
     print("Reinforcement Agent setup ... " + tick_sign)
 
 
@@ -161,10 +170,11 @@ def main():
 
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment
-                    reward = environment.perform(action,0.5,0.5,dt=1000,mark_depth=markers_z)
+                    reward = environment.perform(action,0.5,0.5,dt=2000,mark_depth=markers_z)
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
-                    
+                    # Visualize in rqt_plot
+                    reward_curve.publish(reward)
 
                     # Save experience
                     robot.step(state,action,reward,next_state,True)
@@ -185,5 +195,5 @@ def main():
 
 if __name__ == '__main__':
     rospy.init_node(node_name)
-    print(node_name+" is started!")
+    print(node_name+" is started ... "+tick_sign)
     main()

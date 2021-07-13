@@ -140,21 +140,21 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
     speed_msg = Twist()    
     if (action == 0):
-        speed_msg.linear.x = basic_power
+        speed_msg.linear.x = basic_power*1.2
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0
     elif (action == 1):
-        speed_msg.linear.x = 0
+        speed_msg.linear.x = basic_power
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
         speed_msg.angular.z = turn_power
     elif (action == 2):
-        speed_msg.linear.x = 0
+        speed_msg.linear.x = basic_power
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
@@ -168,7 +168,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0    
     else:
-        speed_msg.linear.x = -basic_power
+        speed_msg.linear.x = -basic_power*1.2
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
@@ -189,13 +189,20 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
     d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
     d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
-    # Depth marker monitoring
-    punishment = 0
-    if (((np.isnan(mark_depth[0]))or(np.isnan(mark_depth[1]))or(np.isnan(mark_depth[2]))) and (action!=3)):
-        punishment = -9999
-    if (((np.isnan(mark_depth[0]))or(np.isnan(mark_depth[1]))or(np.isnan(mark_depth[2]))) and (action==3)):
-        punishment = 9999
-    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*20 + punishment
+    # If the robot can stop in the cave, a great bonus is given
+    bonus = 0
+    inside_x = (robot_x>cave_x_min)and(robot_x<cave_x_max)
+    inside_y = (robot_y>cave_y_min)and(robot_y<cave_y_max)
+    if (inside_x and inside_y):
+        if(action == 3):
+            bonus = 1000
+    else:
+        if(action == 3):
+            bonus = -1000
+    
+    #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
+    #    punishment = -9999
+    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*1 + bonus
     return r
 
 
