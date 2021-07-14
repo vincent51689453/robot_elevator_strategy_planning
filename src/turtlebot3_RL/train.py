@@ -145,6 +145,7 @@ def main():
     t = 0
     total_reward = 0
     while(i<max_epoch):
+        total_reward = 0
         if(depth_display_image is not None):
             print("")
             print("#### Epoch: " + str(i)+ " ####")
@@ -173,13 +174,14 @@ def main():
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment
                     reward,complete = environment.perform(action,0.5,0.5,dt=2000,mark_depth=markers_z)
+                    total_reward += reward
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
                     # Visualize in rqt_plot
                     reward_curve.publish(reward)
 
                     # Save experience
-                    robot.step(state,action,reward,next_state,complete)
+                    robot.step(state,action,total_reward,next_state,complete)
                     RL_mode = 0
                     t += 1
                     # Decrease epsilon

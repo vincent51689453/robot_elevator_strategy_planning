@@ -60,3 +60,5 @@ export TURTLEBOT3_MODEL=waffle
 
 ![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/elevator_world_2.JPG)
 
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/basic_RL_demo.gif)
+
