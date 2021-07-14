@@ -40,5 +40,5 @@ class QNetwork(nn.Module):
         # print(x.shape) 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.softmax(self.fc3(x))
+        x = self.fc3(x)
         return x
