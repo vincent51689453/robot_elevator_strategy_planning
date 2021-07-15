@@ -121,6 +121,7 @@ def main():
     # Publisher of rqt_plot
     reward_curve = rospy.Publisher(reward_topic, Float32, queue_size=1)
     reward_curve_rate = rospy.Rate(1)
+    print("Reward Publisher ... " + tick_sign)
     
     # Setup RL agent
     # Action: Forward/Left/Right/Backward/Stop

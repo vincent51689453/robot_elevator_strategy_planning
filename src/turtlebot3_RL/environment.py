@@ -235,13 +235,14 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
             bonus = 0
 
     # Force reset if the robot goes too far
+    print("robot x:",robot_x)
     if(robot_x>0)or(robot_y<0):
         # special number for force_reset
         r = 9887
-    
-    #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
-    #    punishment = -9999
-    r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*0.1 + bonus
+    else:
+        #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
+        #    punishment = -9999
+        r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*0.1 + bonus
     return r,task_complete
 
 
