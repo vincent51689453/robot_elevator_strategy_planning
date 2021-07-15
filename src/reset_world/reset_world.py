@@ -19,8 +19,8 @@ elevator = 'cave'
 # (x,y,z,r,p,y)
 turtlebot_init_pos = (0,1.0,0,0,0,3.14)
 elevator_init_pos = (-1.99,1.048,0,0,0,0)
-cave_y_max = 1.55
-cave_y_min = 0.4
+cave_y_max = 1.4
+cave_y_min = 0.5
 cave_x_max = -1.4
 cave_x_min = -2.4
 cave_z = 0.164
