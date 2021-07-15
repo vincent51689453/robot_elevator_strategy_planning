@@ -69,7 +69,7 @@ eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
 action_list = ['Forward','Left','Right','Stop','Backward']
-action_duration = 10
+action_duration = 12
 
 def depth_callback(ros_msg):
     # Depth image callback
