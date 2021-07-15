@@ -187,7 +187,7 @@ def main():
                         robot.step(state,action,total_reward,next_state,complete)
                         RL_mode = 0
                         t += 1
-                    else
+                    else:
                         t = max_dt
                         print("The world is force reset ..." + cross_sign)
                     # Decrease epsilon
