@@ -23,9 +23,9 @@ elevator = 'cave'
 turtlebot_init_pos = (0,1.0,0,0,0,3.14)
 elevator_init_pos = (-1.99,1.048,0,0,0,0)
 cave_y_max = 1.4
-cave_y_min = 0.5
+cave_y_min = 0.6
 cave_x_max = -1.4
-cave_x_min = -2.4
+cave_x_min = -2.3
 cave_z = 0.164
 objects = []
 
@@ -88,11 +88,20 @@ def reset_env():
     global objects
     objects = []
     seed_i = 0
+    first_x,first_y = 0,0
     # Rearrnage obstacles in the cave
     for i in range(0,len(obstacles)):
         # Generate random locations
         x,y,z = 0,0,0
         x,y,z = shuffle_pos()
+        if(i == 0):
+            first_x,first_y,z = x,y,z
+
+        # Avoid objects stack together
+        safe_d = ((first_x-x)**2+(first_y-y)**2)**0.5
+        if(safe_d<=0.2):
+            x += 0.4        
+
         # Publish new object location and orientation
         state_msg = ModelState()
         state_msg.model_name = obstacles[i]
@@ -163,7 +172,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
     speed_msg = Twist()    
     if (action == 0):
-        speed_msg.linear.x = basic_power*1.2
+        speed_msg.linear.x = basic_power*1
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
@@ -191,7 +200,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0    
     else:
-        speed_msg.linear.x = -basic_power*1.2
+        speed_msg.linear.x = -basic_power*1
         speed_msg.linear.y = 0
         speed_msg.linear.z = 0
         speed_msg.angular.x = 0
@@ -220,6 +229,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
         if(action == 3):
             bonus = 0
             task_complete = True
+            print("Robot task complete " + tick_sign)
     else:
         if(action == 3):
             bonus = 0
