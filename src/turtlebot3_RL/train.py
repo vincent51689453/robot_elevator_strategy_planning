@@ -69,6 +69,7 @@ eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
 action_list = ['Forward','Left','Right','Stop','Backward']
+action_duration = 10
 
 def depth_callback(ros_msg):
     # Depth image callback
@@ -172,8 +173,9 @@ def main():
                     next_state = torch.unsqueeze(next_state,0)
 
                     #print("Mode: Next state -> Performing Action")
-                    # Apply to the environment
-                    reward,complete = environment.perform(action,0.5,0.5,dt=2000,mark_depth=markers_z)
+                    # Apply to the environment (dt is time for each action to keep)
+                    global action_duration
+                    reward,complete = environment.perform(action,0.5,0.5,dt=action_duration,mark_depth=markers_z)
                     total_reward += reward
                     #print("Reward at t->{}= {}".format(str(t),str(reward)))
                     print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
