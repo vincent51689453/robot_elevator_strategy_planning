@@ -39,7 +39,7 @@ When you can control the turtlebot with keyboard, it means the basic installtion
 ## Reinforcemnet Learning Simulation
 Deep Q Network approach is chosen as the control algorithm by defining the states, rewards and actions in Gazebo. The state is the depth image captured by the depth camera such as realsense, Zed camera, etc. The size of the action vector equals to 5 including forward, backward, left, right and stop. Each action associate with the state can generate an unique Q values. As the result, we are trying to plan the strategy based on maximizing the Q values. Furthremore, in order to guide the robot and define the achievemnt of it, a reward function is defined based on the distance between the robot and the elevator and the distance between several objects.
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/DQN_Diagram.JPG)
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/DQN_Diagram.JPG)
 
 1. Launch elevator world
 ```
@@ -58,7 +58,7 @@ export TURTLEBOT3_MODEL=waffle
 ./train_elevator.sh
 ```
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/elevator_world_2.JPG)
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/elevator_world_2.JPG)
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/main/git_image/basic_RL_demo.gif)
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/basic_RL_demo.gif)
 
