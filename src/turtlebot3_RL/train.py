@@ -176,16 +176,20 @@ def main():
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
                     reward,complete = environment.perform(action,0.2,0.2,dt=action_duration,mark_depth=markers_z)
-                    total_reward += reward
-                    #print("Reward at t->{}= {}".format(str(t),str(reward)))
-                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
-                    # Visualize in rqt_plot
-                    reward_curve.publish(reward)
+                    if(rewrad != 9887):
+                        total_reward += reward
+                        #print("Reward at t->{}= {}".format(str(t),str(reward)))
+                        print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
+                        # Visualize in rqt_plot
+                        reward_curve.publish(reward)
 
-                    # Save experience
-                    robot.step(state,action,total_reward,next_state,complete)
-                    RL_mode = 0
-                    t += 1
+                        # Save experience
+                        robot.step(state,action,total_reward,next_state,complete)
+                        RL_mode = 0
+                        t += 1
+                    else
+                        t = max_dt
+                        print("The world is force reset ..." + cross_sign)
                     # Decrease epsilon
                     eps = max(eps*eps_decay,eps_end)
             environment.reset_env()
