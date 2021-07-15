@@ -236,7 +236,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
 
     # Force reset if the robot goes too far
     print("robot x:",robot_x)
-    if(robot_x>0)or(robot_y<0):
+    if(robot_x>0.3)or(robot_y<0.3):
         # special number for force_reset
         r = 9887
     else:
