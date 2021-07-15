@@ -176,7 +176,7 @@ def main():
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
                     reward,complete = environment.perform(action,0.2,0.2,dt=action_duration,mark_depth=markers_z)
-                    if(rewrad != 9887):
+                    if(reward != 9887):
                         total_reward += reward
                         #print("Reward at t->{}= {}".format(str(t),str(reward)))
                         print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
