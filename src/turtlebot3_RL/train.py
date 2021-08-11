@@ -40,7 +40,7 @@ import DQN
 # ROS Topic
 node_name = 'RL_Controller'
 depth_image_topic = '/camera/depth/image_raw'
-reward_topic = '/RL/reward'
+reward_topic = '/RL/reward/'
 distance_toipc = 'RL/distance/'
 iteration_topic = 'RL/iteration'
 
@@ -73,6 +73,7 @@ eps_decay = 0.996
 action_list = ['Forward','Left','Right','Stop','Backward']
 action_duration = 1
 iteration_counter = 0
+total_reward = 0
 
 def depth_callback(ros_msg):
     # Depth image callback
@@ -115,16 +116,21 @@ def nan_recover(frame):
     return frame
 
 def main():
-    global depth_display_image,scores,markers_z,iteration_counter
+    global depth_display_image,scores,markers_z,iteration_counter,total_reward
 
     # Subscribe depth image
     rospy.Subscriber(depth_image_topic,Image,callback=depth_callback, queue_size=1)
     print("Depth image subscriber ... " + tick_sign)
 
     # Publisher of rqt_plot
-    reward_curve = rospy.Publisher(reward_topic, Float32, queue_size=1)
+    reward_curve = rospy.Publisher(reward_topic+ 'stage', Float32, queue_size=1)
     reward_curve_rate = rospy.Rate(1)
     print("Reward Publisher ... " + tick_sign)
+
+    # Publisher of rqt_plot
+    total_reward_curve = rospy.Publisher(reward_topic+ 'total', Float32, queue_size=1)
+    total_reward_curve_rate = rospy.Rate(1)
+    print("total_reward Publisher ... " + tick_sign)
 
     # Publisher of rqt_plot
     iteration_curve = rospy.Publisher(iteration_topic, Float32, queue_size=1)
@@ -178,9 +184,7 @@ def main():
     # Start training
     i = 1
     t = 0
-    total_reward = 0
     while(i<max_epoch):
-        total_reward = 0
         if(depth_display_image is not None):
             print("")
             print("#### Epoch: " + str(i)+ " ####")
@@ -222,6 +226,7 @@ def main():
                         obj3_d_curve.publish(distances[3])
                         obj4_d_curve.publish(distances[4])
                         iteration_curve.publish(iteration_counter)
+                        total_reward_curve.publish(total_reward)
 
                         # Save experience
                         robot.step(state,action,total_reward,next_state,complete)

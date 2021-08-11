@@ -229,11 +229,12 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     # Calculate distances
     cave_mid_x = cave_x_max+cave_x_min/2
     cave_mid_y = cave_y_max+cave_y_min/2
-    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5
-    d_obj1 = ((cave_mid_x-objects[0][0])**2+(cave_mid_y-objects[0][1])**2)**0.5
-    d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
-    d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
-    d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
+    gain = 10
+    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5*gain
+    d_obj1 = ((cave_mid_x-objects[0][0])**2+(cave_mid_y-objects[0][1])**2)**0.5*gain
+    d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5*gain
+    d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5*gain  
+    d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5*gain
 
     # If the robot can stop in the cave, a great bonus is given
     bonus = 0
@@ -241,7 +242,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     inside_y = (robot_y>cave_y_min)and(robot_y<cave_y_max)
     if (inside_x and inside_y):
         if(action == 3):
-            bonus = 200
+            bonus = 2000
             task_complete = True
             print("Robot task complete " + tick_sign)
     else:
@@ -255,7 +256,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     else:
         #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
         #    punishment = -9999
-        r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5 + bonus
+        r = 1/d_cave*1000 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5 + bonus
 
     distance_packet = (d_cave,d_obj1,d_obj2,d_obj3,d_obj4)
     return r,task_complete,distance_packet
