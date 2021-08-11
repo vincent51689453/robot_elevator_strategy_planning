@@ -12,12 +12,12 @@ from torch.autograd import Variable
 
 from DQN import QNetwork
 
-BUFFER_SIZE = int(1000)  #replay buffer size
+BUFFER_SIZE = int(500)  #replay buffer size
 BATCH_SIZE = 64         # minibatch size was 64
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR = 0.01               # learning rate was 5e-4
-UPDATE_EVERY = 4        # how often to update the network
+LR = 0.001               # learning rate was 5e-4
+UPDATE_EVERY = 16        # how often to update the network
 
 tick_sign = u'\u2713'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
@@ -91,7 +91,8 @@ class Agent():
         #Epsilon -greedy action selction
         sample = random.random()
         if sample > eps:
-            print("[Q-Network] -> Action-Tensor:",action_values)
+            #print("[Q-Network] -> Action-Tensor:",action_values)
+            print("[Q-Network]")
             return np.argmax(action_values.cpu().data.numpy())
         else:
             print("[Random]")

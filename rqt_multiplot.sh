@@ -1,0 +1,1 @@
+rosrun rqt_multiplot rqt_multiplot --force-discover

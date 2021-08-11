@@ -21,7 +21,7 @@ turtlebot = 'turtlebot3_waffle'
 elevator = 'cave'
 # (x,y,z,r,p,y)
 turtlebot_init_pos = (0,1.0,0,0,0,3.14)
-elevator_init_pos = (-1.99,1.048,0,0,0,0)
+elevator_init_pos = (-1.99025,1.04874,0,0,-0,0)
 cave_y_max = 1.4
 cave_y_min = 0.6
 cave_x_max = -1.4
@@ -39,7 +39,6 @@ def where_is_it(object_name):
     y = objstate.pose.position.y
     z = objstate.pose.position.z
     return x,y,z
-
 
 # Euler Quaternian Conversion
 def euler_to_quaternion(r):
@@ -77,30 +76,38 @@ def shuffle_pos():
     z = cave_z
     return x,y,z
 
-# Reset everything
+# Reset everything (deprecated)
+
 def reset_env():
+    print("\r\n")
     # Reset all the status in the world of gazebo
     rospy.wait_for_service('/gazebo/reset_world')
     reset_world = rospy.ServiceProxy('/gazebo/reset_world',Empty)
     reset_world()
     print("The world is reset ... " + tick_sign)
-
     global objects
     objects = []
     seed_i = 0
     first_x,first_y = 0,0
+    
     # Rearrnage obstacles in the cave
     for i in range(0,len(obstacles)):
         # Generate random locations
         x,y,z = 0,0,0
         x,y,z = shuffle_pos()
         if(i == 0):
+            # Record the first obstacle
             first_x,first_y,z = x,y,z
-
-        # Avoid objects stack together
-        safe_d = ((first_x-x)**2+(first_y-y)**2)**0.5
-        if(safe_d<=0.2):
-            x += 0.4        
+        else:
+            # Avoid objects stack together
+            safe_d = ((first_x-x)**2+(first_y-y)**2)**0.5
+            # Move to some special positions
+            if(safe_d<=0.1):
+                y -= 0.1     
+            if((x>=(cave_x_max-0.1))or(x<=(cave_x_min-0.1))):
+                x = 0
+            if((y>=(cave_y_max-0.1))or(y<=(cave_y_min-0.1))):
+                y = 0
 
         # Publish new object location and orientation
         state_msg = ModelState()
@@ -119,10 +126,10 @@ def reset_env():
         try:
             set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
             resp = set_state(state_msg)
-            #print("Render " + obstacles[i] + " done ... " + tick_sign)
+            print("Render " + obstacles[i] + " done ... " + tick_sign)
         except rospy.ServiceException, e:
             print("Render " + obstacles[i] + " failed ... " + cross_sign)
-
+    
     # Set turtle bot position
     state_msg = ModelState()
     state_msg.model_name = turtlebot
@@ -161,7 +168,8 @@ def reset_env():
         resp = set_state(state_msg)
         print("Render " + elevator + " done ... " + tick_sign)
     except rospy.ServiceException, e:
-        print("Render " + elevator + " failed ... " + cross_sign)    
+        print("Render " + elevator + " failed ... " + cross_sign)  
+
 
 # Apply chosen action to the gazebo world
 def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,mark_depth=None):
@@ -214,6 +222,11 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     #Reward function
     # Get turtle bot position
     robot_x,robot_y,robot_z = where_is_it(turtlebot) 
+    # Get obstacles position
+    for i in range(0,4):
+        a,b,c = where_is_it(obstacles[i])
+        objects.append((a,b,cave_x_max))
+    # Calculate distances
     cave_mid_x = cave_x_max+cave_x_min/2
     cave_mid_y = cave_y_max+cave_y_min/2
     d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5
@@ -221,13 +234,14 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
     d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5   
     d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
+
     # If the robot can stop in the cave, a great bonus is given
     bonus = 0
     inside_x = (robot_x>cave_x_min)and(robot_x<cave_x_max)
     inside_y = (robot_y>cave_y_min)and(robot_y<cave_y_max)
     if (inside_x and inside_y):
         if(action == 3):
-            bonus = 0
+            bonus = 200
             task_complete = True
             print("Robot task complete " + tick_sign)
     else:
@@ -235,14 +249,15 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
             bonus = 0
 
     # Force reset if the robot goes too far
-    print("robot x:",robot_x)
     if(robot_x>0.3)or(robot_y<0.3):
         # special number for force_reset
         r = 9887
     else:
         #if ((np.isnan(mark_depth[0]))and(np.isnan(mark_depth[1]))and(np.isnan(mark_depth[2]))):
         #    punishment = -9999
-        r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*0.1 + bonus
-    return r,task_complete
+        r = 1/d_cave*100 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5 + bonus
+
+    distance_packet = (d_cave,d_obj1,d_obj2,d_obj3,d_obj4)
+    return r,task_complete,distance_packet
 
 

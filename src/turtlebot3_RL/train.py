@@ -41,6 +41,8 @@ import DQN
 node_name = 'RL_Controller'
 depth_image_topic = '/camera/depth/image_raw'
 reward_topic = '/RL/reward'
+distance_toipc = 'RL/distance/'
+iteration_topic = 'RL/iteration'
 
 # Variables
 depth_display_image = None
@@ -62,7 +64,7 @@ eps_end (float): minimum value of epsilon
 eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
 scores (integer): list containing score from each epoch
 """
-max_epoch = 200
+max_epoch = 500
 max_dt = 16 # was20
 move_dt = 2000
 eps_start = 1.0
@@ -70,6 +72,7 @@ eps_end = 0.01
 eps_decay = 0.996
 action_list = ['Forward','Left','Right','Stop','Backward']
 action_duration = 1
+iteration_counter = 0
 
 def depth_callback(ros_msg):
     # Depth image callback
@@ -112,7 +115,7 @@ def nan_recover(frame):
     return frame
 
 def main():
-    global depth_display_image,scores,markers_z
+    global depth_display_image,scores,markers_z,iteration_counter
 
     # Subscribe depth image
     rospy.Subscriber(depth_image_topic,Image,callback=depth_callback, queue_size=1)
@@ -122,6 +125,36 @@ def main():
     reward_curve = rospy.Publisher(reward_topic, Float32, queue_size=1)
     reward_curve_rate = rospy.Rate(1)
     print("Reward Publisher ... " + tick_sign)
+
+    # Publisher of rqt_plot
+    iteration_curve = rospy.Publisher(iteration_topic, Float32, queue_size=1)
+    iteration_curve_rate = rospy.Rate(1)
+    print("Iteration Publisher ... " + tick_sign)
+
+    # Publish distacne of obstacle 1
+    obj1_d_curve = rospy.Publisher(distance_toipc+'obj1', Float32, queue_size=1)
+    obj1_d_curve_rate = rospy.Rate(1)
+    print("obj1_d_curve Publisher ... " + tick_sign)
+
+    # Publish distacne of obstacle 2
+    obj2_d_curve = rospy.Publisher(distance_toipc+'obj2', Float32, queue_size=1)
+    obj2_d_curve_rate = rospy.Rate(1)
+    print("obj2_d_curve Publisher ... " + tick_sign)
+
+    # Publish distacne of obstacle 3
+    obj3_d_curve = rospy.Publisher(distance_toipc+'obj3', Float32, queue_size=1)
+    obj3_d_curve_rate = rospy.Rate(1)
+    print("obj3_d_curve Publisher ... " + tick_sign)
+
+    # Publish distacne of obstacle 4
+    obj4_d_curve = rospy.Publisher(distance_toipc+'obj4', Float32, queue_size=1)
+    obj4_d_curve_rate = rospy.Rate(1)
+    print("obj4_d_curve Publisher ... " + tick_sign)
+
+    # Publish distacne of cave
+    cave_d_curve = rospy.Publisher(distance_toipc+'cave', Float32, queue_size=1)
+    cave_d_curve_rate = rospy.Rate(1)
+    print("cave_d_curve Publisher ... " + tick_sign)
     
     # Setup RL agent
     # Action: Forward/Left/Right/Backward/Stop
@@ -176,13 +209,19 @@ def main():
                     #print("Mode: Next state -> Performing Action")
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
-                    reward,complete = environment.perform(action,0.2,0.2,dt=action_duration,mark_depth=markers_z)
+                    reward,complete,distances = environment.perform(action,0.2,0.2,dt=action_duration,mark_depth=markers_z)
                     if(reward != 9887):
                         total_reward += reward
                         #print("Reward at t->{}= {}".format(str(t),str(reward)))
-                        print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}\r\n".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
+                        print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
                         # Visualize in rqt_plot
                         reward_curve.publish(reward)
+                        cave_d_curve.publish(distances[0])
+                        obj1_d_curve.publish(distances[1])
+                        obj2_d_curve.publish(distances[2])
+                        obj3_d_curve.publish(distances[3])
+                        obj4_d_curve.publish(distances[4])
+                        iteration_curve.publish(iteration_counter)
 
                         # Save experience
                         robot.step(state,action,total_reward,next_state,complete)
@@ -193,6 +232,9 @@ def main():
                         print("The world is force reset ..." + cross_sign)
                     # Decrease epsilon
                     eps = max(eps*eps_decay,eps_end)
+                    iteration_counter += 1
+
+            # reset world
             environment.reset_env()
             time.sleep(1)
             t = 0
