@@ -95,6 +95,7 @@ def reset_env():
         # Generate random locations
         x,y,z = 0,0,0
         x,y,z = shuffle_pos()
+        """
         if(i == 0):
             # Record the first obstacle
             first_x,first_y,z = x,y,z
@@ -105,9 +106,10 @@ def reset_env():
             if(safe_d<=0.1):
                 y -= 0.1     
             if((x>=(cave_x_max-0.1))or(x<=(cave_x_min-0.1))):
-                x = 0
+                x = 10
             if((y>=(cave_y_max-0.1))or(y<=(cave_y_min-0.1))):
-                y = 0
+                y = 10
+        """
 
         # Publish new object location and orientation
         state_msg = ModelState()
@@ -176,6 +178,21 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
     global objects
     task_complete = False
     t = 0
+
+    # Get turtle bot position
+    robot_x,robot_y,robot_z = where_is_it(turtlebot) 
+    # Get obstacles position
+    for i in range(0,4):
+        a,b,c = where_is_it(obstacles[i])
+        objects.append((a,b,cave_x_max))
+
+    # Mission accomplished if it is inside the cave
+    inside_x = (robot_x>cave_x_min)and(robot_x<cave_x_max)
+    inside_y = (robot_y>cave_y_min)and(robot_y<cave_y_max)
+    if(inside_x and inside_y):
+        # force to stop
+        action = 3
+
     # ROS Publisher (/cmd_vel)
     velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
     speed_msg = Twist()    
@@ -220,12 +237,6 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
         t += 1
 
     #Reward function
-    # Get turtle bot position
-    robot_x,robot_y,robot_z = where_is_it(turtlebot) 
-    # Get obstacles position
-    for i in range(0,4):
-        a,b,c = where_is_it(obstacles[i])
-        objects.append((a,b,cave_x_max))
     # Calculate distances
     cave_mid_x = cave_x_max+cave_x_min/2
     cave_mid_y = cave_y_max+cave_y_min/2
@@ -238,8 +249,6 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,dt=2000,ma
 
     # If the robot can stop in the cave, a great bonus is given
     bonus = 0
-    inside_x = (robot_x>cave_x_min)and(robot_x<cave_x_max)
-    inside_y = (robot_y>cave_y_min)and(robot_y<cave_y_max)
     if (inside_x and inside_y):
         if(action == 3):
             bonus = 2000

@@ -229,6 +229,9 @@ def main():
                         total_reward_curve.publish(total_reward)
 
                         # Save experience
+                        if(reward>2000):
+                            # forced to stop
+                            action = 3
                         robot.step(state,action,total_reward,next_state,complete)
                         RL_mode = 0
                         t += 1
