@@ -17,7 +17,6 @@ import numpy.ma as ma
 import time
 from datetime import datetime
 
-
 #ROS Packages
 import rospy
 from sensor_msgs.msg import Image
@@ -45,35 +44,30 @@ distance_toipc = 'RL/distance/'
 iteration_topic = 'RL/iteration'
 
 # Variables
-depth_display_image = None
-tick_sign = u'\u2713'.encode('utf8')
-cross_sign = u'\u274c'.encode('utf8')
-# Safety depth marker
-marker1 = (int(740/2), int(480/2))
-marker2 = (int(740/2)-50, int(480/2))
-marker3 = (int(740/2)+50, int(480/2))
-markers_z = []
-
 """
 DQN Hyperparameters
 max_epoch (int): maximum number of training epsiodes
 max_dt (int): maximum number of timesteps per episode
-move_dt(int): maximum number of timesteps per action
 eps_start (float): starting value of epsilon, for epsilon-greedy action selection
 eps_end (float): minimum value of epsilon 
 eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
-scores (integer): list containing score from each epoch
+iteration_counter (int): total iteration during training
+total_reward (int): total reward during training
+action_list (list<string>): all possible output actions
 """
 max_epoch = 500
-max_dt = 16 # was20
-move_dt = 2000
+max_dt = 16
 eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
-action_list = ['Forward','Left','Right','Stop','Backward']
-action_duration = 1
 iteration_counter = 0
 total_reward = 0
+action_list = ['Forward','Left','Right','Stop','Backward']
+
+depth_display_image = None
+tick_sign = u'\u2713'.encode('utf8')
+cross_sign = u'\u274c'.encode('utf8')
+
 
 def depth_callback(ros_msg):
     # Depth image callback
@@ -91,12 +85,6 @@ def depth_callback(ros_msg):
     # Convert the depth image to a Numpy array since most cv2 functions
     # require Numpy arrays.
     depth_array = np.array(depth_image, dtype=np.float32)
-    d1 = depth_image[marker1[1],marker1[0]]
-    d2 = depth_image[marker2[1],marker2[0]]
-    d3 = depth_image[marker3[1],marker3[0]]
-    markers_z.append(d1)
-    markers_z.append(d2)
-    markers_z.append(d3)
     # Normalize the depth image to fall between 0 (black) and 1 (white)
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
@@ -116,7 +104,7 @@ def nan_recover(frame):
     return frame
 
 def main():
-    global depth_display_image,scores,markers_z,iteration_counter,total_reward
+    global depth_display_image,iteration_counter,total_reward
 
     # Subscribe depth image
     rospy.Subscriber(depth_image_topic,Image,callback=depth_callback, queue_size=1)
@@ -128,9 +116,9 @@ def main():
     print("Reward Publisher ... " + tick_sign)
 
     # Publisher of rqt_plot
-    total_reward_curve = rospy.Publisher(reward_topic+ 'total', Float32, queue_size=1)
-    total_reward_curve_rate = rospy.Rate(1)
-    print("total_reward Publisher ... " + tick_sign)
+    loss_curve = rospy.Publisher(reward_topic+ 'loss', Float32, queue_size=1)
+    loss_curve_rate = rospy.Rate(1)
+    print("loss Publisher ... " + tick_sign)
 
     # Publisher of rqt_plot
     iteration_curve = rospy.Publisher(iteration_topic, Float32, queue_size=1)
@@ -169,21 +157,17 @@ def main():
     robot = RLagent.Agent(state_size=1,action_size=5,seed=mils)
     print("Reinforcement agent setup ... " + tick_sign)
 
-
     # Training initilization
-    # Reset the world
-    environment.reset_env()
+    RL_mode = 0                 # 0 for current state and 1 for next state 
+    environment.reset_env()     # Reset the world
     time.sleep(1)
     reward = 0
-    scores = []
     eps = eps_start
     transformer = transforms.ToTensor()
-    # 0 for current state and 1 for next state
-    RL_mode = 0
 
     # Start training
-    i = 1
-    t = 0
+    i = 1  #episodes
+    t = 0  #actions between each episode
     while(i<max_epoch):
         if(depth_display_image is not None):
             print("")
@@ -191,70 +175,62 @@ def main():
             while (t<max_dt):
                 # Current state
                 if(RL_mode==0):
-                    #print("Mode: Current state -> Choosing Action")
                     # Set state as depth image observation (current state)
-                    #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     state = Variable(image_tensor).cuda()  
                     state = torch.unsqueeze(state,0)
 
                     # Select an action
                     action = robot.act(state,eps)
-                    #print("Agent chosen action: " + action_list[action])
+
+                    # Agent starts performing the chosen action
                     RL_mode = 1
                 # Next state
                 else:
                     # Set state as depth image observation (next state)
-                    #depth_display_image = cv2.resize(depth_display_image,(720,480))
                     image_tensor = transformer(depth_display_image)
                     next_state = Variable(image_tensor).cuda()  
                     next_state = torch.unsqueeze(next_state,0)
 
-                    #print("Mode: Next state -> Performing Action")
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
-                    reward,complete,distances = environment.perform(action,0.2,0.2,dt=action_duration,mark_depth=markers_z)
-                    if(reward != 9887):
-                        total_reward += reward
-                        #print("Reward at t->{}= {}".format(str(t),str(reward)))
-                        print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{}".format(str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
-                        # Visualize in rqt_plot
-                        reward_curve.publish(reward)
-                        cave_d_curve.publish(distances[0])
-                        obj1_d_curve.publish(distances[1])
-                        obj2_d_curve.publish(distances[2])
-                        obj3_d_curve.publish(distances[3])
-                        obj4_d_curve.publish(distances[4])
-                        iteration_curve.publish(iteration_counter)
-                        total_reward_curve.publish(total_reward)
+                    reward,complete,distances = environment.perform(action,0.2,0.2)
+                    total_reward += reward
 
-                        # Save experience
-                        if(reward>2000):
-                            # forced to stop
-                            action = 3
-                        robot.step(state,action,total_reward,next_state,complete)
-                        RL_mode = 0
-                        t += 1
-                    else:
-                        t = max_dt
-                        print("The world is force reset ..." + cross_sign)
+                    # Save experience
+                    loss = robot.step(state,action,total_reward,next_state,complete)
+
                     # Decrease epsilon
                     eps = max(eps*eps_decay,eps_end)
                     iteration_counter += 1
+
+                    # Agent starts choosing action
+                    RL_mode = 0
+
+                    # Terminal display
+                    print("Epoch:{} Batch [{}/{}]: Action->{} Reward->{} ".format( \
+                        str(i),str(t+1),str(max_dt),action_list[action],str(reward)))
+                    
+                    # Visualize in rqt_plot
+                    reward_curve.publish(reward)
+                    cave_d_curve.publish(distances[0])
+                    obj1_d_curve.publish(distances[1])
+                    obj2_d_curve.publish(distances[2])
+                    obj3_d_curve.publish(distances[3])
+                    obj4_d_curve.publish(distances[4])
+                    iteration_curve.publish(iteration_counter)
+                    loss_curve.publish(loss)
+
+                    # Next action
+                    t += 1
 
             # reset world
             environment.reset_env()
             time.sleep(1)
             t = 0
             i += 1
-           
-            # Visualization in new window
-            #depth_display_image = cv2.resize(depth_display_image,(720,480))
-            #cv2.imshow("Depth image",depth_display_image)
-            #if cv2.waitKey(1) & 0xFF == ord('q'):
-            #    break
 
 if __name__ == '__main__':
     rospy.init_node(node_name)
-    print(node_name+" is started ... "+tick_sign)
+    print(node_name + " is started ... " + tick_sign)
     main()

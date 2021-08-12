@@ -22,10 +22,16 @@ class QNetwork(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.pool = nn.MaxPool2d(2, 2)
+        self.conv3 = nn.Conv2d(16, 32, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv4 = nn.Conv2d(32, 32, 5)
+        self.pool = nn.MaxPool2d(2, 2)
 
-        self.fc1 = nn.Linear(331344, 120)        
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, action_size)
+        self.fc1 = nn.Linear(34112, 1024)        
+        self.fc2 = nn.Linear(1024, 512)
+        self.fc3 = nn.Linear(512, 128)
+        self.fc4 = nn.Linear(128, 50)
+        self.fc5 = nn.Linear(50, action_size)
         
     def forward(self,x):
         # x = state
@@ -34,11 +40,15 @@ class QNetwork(nn.Module):
         """
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        x = self.pool(F.relu(self.conv4(x)))
         x = torch.flatten(x,1)
         # shape can help \
         # check tensor dimensions
         # print(x.shape) 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
         return x

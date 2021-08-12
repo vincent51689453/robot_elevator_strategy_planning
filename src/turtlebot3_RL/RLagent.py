@@ -12,10 +12,10 @@ from torch.autograd import Variable
 
 from DQN import QNetwork
 
-BUFFER_SIZE = int(500)  #replay buffer size
-BATCH_SIZE = 64         # minibatch size was 64
-GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
+BUFFER_SIZE = int(500)   # replay buffer size
+BATCH_SIZE = 32          # minibatch size was 64
+GAMMA = 0.99             # discount factor
+TAU = 1e-3               # for soft update of target parameters
 LR = 0.001               # learning rate was 5e-4
 UPDATE_EVERY = 16        # how often to update the network
 
@@ -38,6 +38,7 @@ class Agent():
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(seed)
+        self.network_loss = 0
         
         
         #Q- Network
@@ -63,17 +64,11 @@ class Agent():
         self.t_step = (self.t_step+1)% UPDATE_EVERY
         if self.t_step == 0:
             # If enough samples are available in memory, get radom subset and learn
-
             if len(self.memory)>BATCH_SIZE:
                 experience = self.memory.sample()
-                self.learn(experience, GAMMA)
-            """    
-            else:
-                # NO USE NOW
-                mils = int(str(datetime.now())[20:])
-                self.memory = ReplayBuffer(5, BUFFER_SIZE,BATCH_SIZE,mils)
-                #self.memory = []
-            """
+                self.network_loss = self.learn(experience, GAMMA)
+        
+        return self.network_loss
                 
     def act(self, state, eps = 0):
         """Returns action for given state as per current policy
@@ -135,7 +130,11 @@ class Agent():
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local,self.qnetwork_target,TAU)
-        print("Passing experiences to GPU ..." + tick_sign)
+        print("\r\n")
+        print("Passing experiences to network ..." + tick_sign)
+        print("Loss is updated to ",loss.item())
+
+        return loss.item()
             
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.

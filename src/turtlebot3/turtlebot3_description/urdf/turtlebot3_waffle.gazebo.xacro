@@ -147,7 +147,7 @@
   <gazebo reference="camera_rgb_frame">
     <sensor type="depth" name="realsense_R200">
       <always_on>true</always_on>
-      <visualize>$(arg camera_visual)</visualize>
+      <visualize>1</visualize>
       <camera>
           <horizontal_fov>1.3439</horizontal_fov>
           <image>
