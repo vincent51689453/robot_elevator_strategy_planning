@@ -64,7 +64,4 @@ export TURTLEBOT3_MODEL=waffle
 ./train_elevator.sh
 ```
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/elevator_world_3.png)
-
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/basic_RL_demo.gif)
-
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/training_interface.png)
