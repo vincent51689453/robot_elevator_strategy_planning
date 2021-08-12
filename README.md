@@ -1,6 +1,12 @@
 # robot_elevator_strategy_planning
 
 ## Environmental Setup for ROS Melodic
+### ROS multiplot Installation
+```
+sudo apt-get update
+sudo apt-get install ros-melodic-rqt-multiplot
+```
+
 ### Turtle Bot 3 Installation 
 1. Install turtle bot 3 packages
 ```
@@ -58,7 +64,7 @@ export TURTLEBOT3_MODEL=waffle
 ./train_elevator.sh
 ```
 
-![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/elevator_world_2.JPG)
+![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/elevator_world_3.png)
 
 ![image](https://github.com/vincent51689453/robot_elevator_strategy_planning/blob/rtx-melodic/git_image/basic_RL_demo.gif)
 

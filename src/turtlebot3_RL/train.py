@@ -70,7 +70,7 @@ depth_display_image = None
 tick_sign = u'\u2713'.encode('utf8')
 cross_sign = u'\u274c'.encode('utf8')
 
-
+# Receive depth image from gazebo
 def depth_callback(ros_msg):
     # Depth image callback
     global depth_display_image,marker_z
@@ -91,7 +91,6 @@ def depth_callback(ros_msg):
     cv2.normalize(depth_array, depth_array, 0, 1, cv2.NORM_MINMAX)
     # Process the depth image
     depth_display_image = nan_recover(depth_array)
-
 
 # Replace all NAN by 0
 def nan_recover(frame):
