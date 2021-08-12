@@ -51,15 +51,17 @@ max_dt (int): maximum number of timesteps per episode
 eps_start (float): starting value of epsilon, for epsilon-greedy action selection
 eps_end (float): minimum value of epsilon 
 eps_decay (float): mutiplicative factor (per episode) for decreasing epsilon
+eps_decay_step (int): number of steps for eps to decay once
 iteration_counter (int): total iteration during training
 total_reward (int): total reward during training
 action_list (list<string>): all possible output actions
 """
-max_epoch = 500
+max_epoch = 1000
 max_dt = 16
 eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
+eps_decay_step = 10
 iteration_counter = 0
 total_reward = 0
 action_list = ['Forward','Left','Right','Stop','Backward']
@@ -200,8 +202,6 @@ def main():
                     # Save experience
                     loss = robot.step(state,action,total_reward,next_state,complete)
 
-                    # Decrease epsilon
-                    eps = max(eps*eps_decay,eps_end)
                     iteration_counter += 1
 
                     # Agent starts choosing action
@@ -223,6 +223,10 @@ def main():
 
                     # Next action
                     t += 1
+
+            # Decrease epsilon (leave enough random to explore the world)
+            if(i%eps_decay_step)==0:
+                eps = max(eps*eps_decay,eps_end)
 
             # reset world
             environment.reset_env()
