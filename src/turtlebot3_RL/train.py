@@ -42,6 +42,7 @@ depth_image_topic = '/camera/depth/image_raw'
 reward_topic = '/RL/reward/'
 distance_toipc = 'RL/distance/'
 iteration_topic = 'RL/iteration'
+theta_topic = 'RL/theta/'
 
 # Variables
 """
@@ -61,7 +62,7 @@ max_dt = 16
 eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
-eps_decay_step = 10
+eps_decay_step = 1
 iteration_counter = 0
 total_reward = 0
 action_list = ['Forward','Left','Right','Stop','Backward']
@@ -150,6 +151,11 @@ def main():
     cave_d_curve = rospy.Publisher(distance_toipc+'cave', Float32, queue_size=1)
     cave_d_curve_rate = rospy.Rate(1)
     print("cave_d_curve Publisher ... " + tick_sign)
+
+    # Publish deflected theta
+    theta_curve = rospy.Publisher(theta_topic, Float32, queue_size=1)
+    theta_curve_rate = rospy.Rate(1)
+    print("theta Publisher ... " + tick_sign)
     
     # Setup RL agent
     # Action: Forward/Left/Right/Backward/Stop
@@ -195,7 +201,7 @@ def main():
 
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
-                    reward,complete,distances = environment.perform(action,0.2,0.2)
+                    reward,complete,ros_info = environment.perform(action,0.2,0.2)
                     total_reward += reward
 
                     # Save experience
@@ -212,13 +218,14 @@ def main():
                     
                     # Visualize in rqt_plot
                     reward_curve.publish(reward)
-                    cave_d_curve.publish(distances[0])
-                    obj1_d_curve.publish(distances[1])
-                    obj2_d_curve.publish(distances[2])
-                    obj3_d_curve.publish(distances[3])
-                    obj4_d_curve.publish(distances[4])
+                    cave_d_curve.publish(ros_info[0])
+                    obj1_d_curve.publish(ros_info[1])
+                    obj2_d_curve.publish(ros_info[2])
+                    obj3_d_curve.publish(ros_info[3])
+                    obj4_d_curve.publish(ros_info[4])
                     iteration_curve.publish(iteration_counter)
                     loss_curve.publish(loss)
+                    theta_curve.publish(ros_info[5])
 
                     # Next action
                     t += 1

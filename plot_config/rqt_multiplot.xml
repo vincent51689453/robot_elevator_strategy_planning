@@ -372,7 +372,7 @@
                                 <title_visible>true</title_visible>
                             </x_axis>
                             <y_axis>
-                                <custom_title>Total Reward</custom_title>
+                                <custom_title>Loss</custom_title>
                                 <title_type>1</title_type>
                                 <title_visible>true</title_visible>
                             </y_axis>
@@ -404,7 +404,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/RL/reward/total</topic>
+                                    <topic>/RL/reward/loss</topic>
                                     <type>std_msgs/Float32</type>
                                 </y_axis>
                             </axes>
@@ -428,14 +428,14 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>Total reward</title>
+                            <title>Network Loss</title>
                         </curve_0>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Total Reward</title>
+                    <title>Network Loss</title>
                 </column_0>
             </row_2>
         </plots>

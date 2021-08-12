@@ -211,22 +211,29 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
     velocity_publisher.publish(speed_msg)     
 
     #Reward function
-    # Calculate distances
+    # Calculate euclidean distances
     cave_mid_x = cave_x_max+cave_x_min/2
     cave_mid_y = cave_y_max+cave_y_min/2
-    gain = 10
-    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5*gain
-    d_obj1 = ((cave_mid_x-objects[0][0])**2+(cave_mid_y-objects[0][1])**2)**0.5*gain
-    d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5*gain
-    d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5*gain  
-    d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5*gain
+    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5
+    d_obj1 = ((cave_mid_x-objects[0][0])**2+(cave_mid_y-objects[0][1])**2)**0.5
+    d_obj2 = ((cave_mid_x-objects[1][0])**2+(cave_mid_y-objects[1][1])**2)**0.5
+    d_obj3 = ((cave_mid_x-objects[2][0])**2+(cave_mid_y-objects[2][1])**2)**0.5
+    d_obj4 = ((cave_mid_x-objects[3][0])**2+(cave_mid_y-objects[3][1])**2)**0.5
+
+    # Calculate relative orientation
+    # Set the robot as the center (0,0)
+    if(cave_mid_y==robot_y):
+        theta = 0
+    else:
+        theta = math.atan(abs(cave_mid_y-robot_y)/abs(cave_mid_x-robot_x))
+        theta = int(math.degrees(theta))
 
     # Reward 
-    r = 1/d_cave*1000 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5
+    r = 1/d_cave*1000 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5 - theta*10
 
     # Info for ros plot
-    distance_packet = (d_cave,d_obj1,d_obj2,d_obj3,d_obj4)
+    info_packet = (d_cave,d_obj1,d_obj2,d_obj3,d_obj4,theta)
 
-    return r,task_complete,distance_packet
+    return r,task_complete,info_packet
 
 
