@@ -18,6 +18,7 @@ class QNetwork(nn.Module):
         """
         ## calls __init__ method of nn.Module class
         super(QNetwork,self).__init__()
+        """
         self.conv1 = nn.Conv2d(state_size, 6, kernel_size=5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
@@ -26,23 +27,26 @@ class QNetwork(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.conv4 = nn.Conv2d(32, 32, 5)
         self.pool = nn.MaxPool2d(2, 2)
+        """
 
-        self.fc1 = nn.Linear(34112, 1024)        
-        self.fc2 = nn.Linear(1024, 512)
+        self.fc1 = nn.Linear(state_size, 512)        
+        self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, 128)
-        self.fc4 = nn.Linear(128, 50)
-        self.fc5 = nn.Linear(50, action_size)
+        self.fc4 = nn.Linear(128, 64)
+        self.fc5 = nn.Linear(64, action_size)
         
     def forward(self,x):
         # x = state
         """
         Build a network that maps state -> action values.
         """
+        """
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
         x = self.pool(F.relu(self.conv4(x)))
         x = torch.flatten(x,1)
+        """
         # shape can help \
         # check tensor dimensions
         # print(x.shape) 

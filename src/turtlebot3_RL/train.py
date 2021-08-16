@@ -161,7 +161,7 @@ def main():
     # Action: Forward/Left/Right/Backward/Stop
     # State: Depth image
     mils = int(str(datetime.now())[20:])
-    robot = RLagent.Agent(state_size=1,action_size=5,seed=mils)
+    robot = RLagent.Agent(state_size=6,action_size=5,seed=mils)
     print("Reinforcement agent setup ... " + tick_sign)
 
     # Training initilization
@@ -183,21 +183,31 @@ def main():
                 # Current state
                 if(RL_mode==0):
                     # Set state as depth image observation (current state)
-                    image_tensor = transformer(depth_display_image)
-                    state = Variable(image_tensor).cuda()  
-                    state = torch.unsqueeze(state,0)
+                    #image_tensor = transformer(depth_display_image)
+                    #state = Variable(image_tensor).cuda()  
+                    #state = torch.unsqueeze(state,0)
+
+                    # Obtain state vector from gazebo
+                    state_vector = environment.observe_gazebo()
+                    state_tensor = torch.Tensor(state_vector)
+                    state_tensor = Variable(state_tensor).cuda()
 
                     # Select an action
-                    action = robot.act(state,eps)
+                    action = robot.act(state_tensor,eps)
 
                     # Agent starts performing the chosen action
                     RL_mode = 1
                 # Next state
                 else:
                     # Set state as depth image observation (next state)
-                    image_tensor = transformer(depth_display_image)
-                    next_state = Variable(image_tensor).cuda()  
-                    next_state = torch.unsqueeze(next_state,0)
+                    #image_tensor = transformer(depth_display_image)
+                    #next_state = Variable(image_tensor).cuda()  
+                    #next_state = torch.unsqueeze(next_state,0)
+
+                    # Obtain state vector from gazebo
+                    next_state_vector = environment.observe_gazebo()
+                    next_state_tensor = torch.Tensor(next_state_vector)
+                    next_state_tensor = Variable(next_state_tensor).cuda()
 
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
@@ -205,7 +215,7 @@ def main():
                     total_reward += reward
 
                     # Save experience
-                    loss = robot.step(state,action,total_reward,next_state,complete)
+                    loss = robot.step(state_tensor,action,total_reward,next_state_tensor,complete)
 
                     iteration_counter += 1
 

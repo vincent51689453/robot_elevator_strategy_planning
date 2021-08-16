@@ -266,4 +266,38 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
 
     return r,task_complete,info_packet
 
+# Get obstacles vector from gazebo
+def observe_gazebo():
+    # Object coordinates (x,y,z)
+    object_coor = []    
+    d_cave = 0
+    d_obj1,d_obj2,d_obj3,d_obj4 = 0,0,0,0
+    theta = 0
 
+    # Get obstacles position
+    for i in range(0,4):
+        a,b,c = where_is_it(obstacles[i])
+        object_coor.append((a,b,cave_z))
+
+    # Get turtle bot position
+    robot_x,robot_y,robot_z = where_is_it(turtlebot)
+
+    # Calculate euclidean distances
+    cave_mid_x = cave_x_max+cave_x_min/2
+    cave_mid_y = cave_y_max+cave_y_min/2
+    d_cave = ((cave_mid_x-robot_x)**2+(cave_mid_y-robot_y)**2)**0.5
+    d_obj1 = ((cave_mid_x-object_coor[0][0])**2+(cave_mid_y-object_coor[0][1])**2)**0.5
+    d_obj2 = ((cave_mid_x-object_coor[1][0])**2+(cave_mid_y-object_coor[1][1])**2)**0.5
+    d_obj3 = ((cave_mid_x-object_coor[2][0])**2+(cave_mid_y-object_coor[2][1])**2)**0.5
+    d_obj4 = ((cave_mid_x-object_coor[3][0])**2+(cave_mid_y-object_coor[3][1])**2)**0.5
+
+    # Calculate relative orientation
+    # Set the robot as the center (0,0)
+    if(cave_mid_y==robot_y):
+        theta = 0
+    else:
+        theta = math.atan(abs(cave_mid_y-robot_y)/abs(cave_mid_x-robot_x))
+        theta = int(math.degrees(theta))
+
+    output_vector = [d_cave,d_obj1,d_obj2,d_obj3,d_obj4,theta]
+    return output_vector
