@@ -13,7 +13,7 @@ from torch.autograd import Variable
 from DQN import QNetwork
 
 BUFFER_SIZE = int(500)   # replay buffer size
-BATCH_SIZE = 32          # minibatch size was 64
+BATCH_SIZE = 16          # minibatch size was 64
 GAMMA = 0.99             # discount factor
 TAU = 1e-3               # for soft update of target parameters
 LR = 0.001               # learning rate was 5e-4
@@ -59,7 +59,7 @@ class Agent():
     def step(self, state, action, reward, next_step, done):
         # Save experience in replay memory
         self.memory.add(state, action, reward, next_step, done)
-
+        print("Size of memory:",len(self.memory))
         # Learn every UPDATE_EVERY time steps.
         self.t_step = (self.t_step+1)% UPDATE_EVERY
         if self.t_step == 0:
@@ -132,7 +132,7 @@ class Agent():
         self.soft_update(self.qnetwork_local,self.qnetwork_target,TAU)
         print("\r\n")
         print("Passing experiences to network ..." + tick_sign)
-        print("Loss is updated to ",loss.item())
+        print("Loss is updated to {}".format(loss.item()))
 
         return loss.item()
             

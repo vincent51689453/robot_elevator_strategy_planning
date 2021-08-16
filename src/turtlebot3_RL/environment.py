@@ -207,7 +207,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
         speed_msg.angular.x = 0
         speed_msg.angular.y = 0
         speed_msg.angular.z = 0    
-
+    # Publish the cmd_vel message
     velocity_publisher.publish(speed_msg)     
 
     #Reward function
@@ -229,7 +229,37 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
         theta = int(math.degrees(theta))
 
     # Reward 
-    r = 1/d_cave*1000 - 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5 - theta*10
+    basic_r = 1/d_cave*1000
+    penalty_distance = 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5
+    penalty_deflection = theta*10
+    extreme = 0
+    
+    # Extreme reward/penalty
+    if(robot_x<cave_x_max)and(robot_x>cave_x_min):
+        if(robot_y<cave_y_max)and(robot_y>cave_y_min):
+            if(action==3):
+                # Extreme reward if the robot can stop inside the cave
+                extreme = 2500
+                task_complete = True
+
+    if((robot_x>cave_x_max)or(robot_x<cave_x_min))or((robot_y>cave_y_max)or(robot_y<cave_y_min)):
+        if(action==3)or(action==4):
+            # Extreme penalty if the robot stops/goes backward outside the cave
+            extreme = -200
+
+    r = basic_r - penalty_deflection - penalty_distance + extreme
+
+    # Avoid negative reward
+    if r < 0:
+        r = (r*-1)/2
+    # Reward Analysis
+    """
+    print("Reward Analysis:")
+    weight_distance = str(round((penalty_distance/basic_r),2)*100*-1)+'%'
+    weight_deflection = str(round((penalty_deflection/basic_r),2)*100*-1)+'%'
+    print("Reward:{} Distance Penalty:{} Deflection Penalty:{}".format(basic_r,penalty_distance,penalty_deflection))
+    print("Distance Penalty Discount:{} Deflection Penalty Discount:{}\r\n".format(weight_distance,weight_deflection))
+    """
 
     # Info for ros plot
     info_packet = (d_cave,d_obj1,d_obj2,d_obj3,d_obj4,theta)
