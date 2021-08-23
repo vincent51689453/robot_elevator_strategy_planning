@@ -229,7 +229,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
         theta = int(math.degrees(theta))
 
     # Reward 
-    basic_r = 1/d_cave*1000
+    basic_r = 1/d_cave*10
     penalty_distance = 1/(d_obj1+d_obj2+d_obj3+d_obj4)*5
     penalty_deflection = theta*10
     extreme = 0
@@ -239,7 +239,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
         if(robot_y<cave_y_max)and(robot_y>cave_y_min):
             if(action==3):
                 # Extreme reward if the robot can stop inside the cave
-                extreme = 2500
+                extreme = 9000
                 task_complete = True
 
     if((robot_x>cave_x_max)or(robot_x<cave_x_min))or((robot_y>cave_y_max)or(robot_y<cave_y_min)):
@@ -299,5 +299,5 @@ def observe_gazebo():
         theta = math.atan(abs(cave_mid_y-robot_y)/abs(cave_mid_x-robot_x))
         theta = int(math.degrees(theta))
 
-    output_vector = [d_cave,d_obj1,d_obj2,d_obj3,d_obj4,theta]
+    output_vector = [d_cave*10,d_obj1*10,d_obj2*10,d_obj3*10,d_obj4*10,theta]
     return output_vector

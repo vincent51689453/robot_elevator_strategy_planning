@@ -191,9 +191,14 @@ def main():
                     state_vector = environment.observe_gazebo()
                     state_tensor = torch.Tensor(state_vector)
                     state_tensor = Variable(state_tensor).cuda()
-
+                    print("Input GPU Tensor:",state_tensor)
                     # Select an action
                     action = robot.act(state_tensor,eps)
+
+                    # Apply to the environment (dt is time for each action to keep)
+                    global action_duration
+                    reward,complete,ros_info = environment.perform(action,0.5,0.5)
+                    total_reward += reward
 
                     # Agent starts performing the chosen action
                     RL_mode = 1
@@ -208,11 +213,6 @@ def main():
                     next_state_vector = environment.observe_gazebo()
                     next_state_tensor = torch.Tensor(next_state_vector)
                     next_state_tensor = Variable(next_state_tensor).cuda()
-
-                    # Apply to the environment (dt is time for each action to keep)
-                    global action_duration
-                    reward,complete,ros_info = environment.perform(action,0.2,0.2)
-                    total_reward += reward
 
                     # Save experience
                     loss = robot.step(state_tensor,action,total_reward,next_state_tensor,complete)

@@ -13,7 +13,7 @@ from torch.autograd import Variable
 from DQN import QNetwork
 
 BUFFER_SIZE = int(500000)   # replay buffer size
-BATCH_SIZE = 16          # minibatch size was 64
+BATCH_SIZE = 64          # minibatch size was 64
 GAMMA = 0.99             # discount factor
 TAU = 1e-3               # for soft update of target parameters
 LR = 0.001               # learning rate was 5e-4
