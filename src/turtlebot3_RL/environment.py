@@ -29,6 +29,9 @@ cave_x_min = -2.3
 cave_z = 0.164
 objects = []
 
+dt_counter = 0
+r = 0
+
 # Get turtle bot pose
 def where_is_it(object_name):
     get_state_service = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
@@ -158,8 +161,10 @@ def reset_env():
 
 
 # Apply chosen action to the gazebo world
-def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
+def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,max_dt=3):
     global objects
+    global dt_counter
+    global r
     task_complete = False
 
     # Get turtle bot position
@@ -246,8 +251,12 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5):
         if(action==3)or(action==4):
             # Extreme penalty if the robot stops/goes backward outside the cave
             extreme = -200
-
-    r = basic_r - penalty_deflection - penalty_distance + extreme
+    
+    if(dt_counter<=max_dt):
+        r += basic_r - penalty_deflection - penalty_distance + extreme
+    else:
+        dt_counter = 0
+        r = basic_r - penalty_deflection - penalty_distance + extreme
 
     # Avoid negative reward
     if r < 0:

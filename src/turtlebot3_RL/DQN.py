@@ -54,5 +54,5 @@ class QNetwork(nn.Module):
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
-        x = self.fc5(x)
+        x = F.softmax(self.fc5(x))
         return x

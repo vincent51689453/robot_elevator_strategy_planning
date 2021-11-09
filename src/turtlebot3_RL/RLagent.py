@@ -13,7 +13,7 @@ from torch.autograd import Variable
 from DQN import QNetwork
 
 BUFFER_SIZE = int(500000)   # replay buffer size
-BATCH_SIZE = 64          # minibatch size was 64
+BATCH_SIZE = 1024         # minibatch size was 64
 GAMMA = 0.99             # discount factor
 TAU = 1e-3               # for soft update of target parameters
 LR = 0.001               # learning rate was 5e-4
@@ -86,8 +86,8 @@ class Agent():
         #Epsilon -greedy action selction
         sample = random.random()
         if sample > eps:
-            #print("[Q-Network] -> Action-Tensor:",action_values)
-            print("[Q-Network]")
+            print("[Q-Network] -> Action-Tensor:",action_values)
+            #print("[Q-Network]")
             return np.argmax(action_values.cpu().data.numpy())
         else:
             print("[Random]")

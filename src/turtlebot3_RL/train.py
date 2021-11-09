@@ -57,8 +57,8 @@ iteration_counter (int): total iteration during training
 total_reward (int): total reward during training
 action_list (list<string>): all possible output actions
 """
-max_epoch = 1000
-max_dt = 16
+max_epoch = 100000
+max_dt = 3
 eps_start = 1.0
 eps_end = 0.01
 eps_decay = 0.996
@@ -197,7 +197,7 @@ def main():
 
                     # Apply to the environment (dt is time for each action to keep)
                     global action_duration
-                    reward,complete,ros_info = environment.perform(action,0.5,0.5)
+                    reward,complete,ros_info = environment.perform(action,0.5,0.5,max_dt)
                     total_reward += reward
 
                     # Agent starts performing the chosen action
