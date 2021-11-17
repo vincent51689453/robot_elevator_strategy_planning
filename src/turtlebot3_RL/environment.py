@@ -254,6 +254,7 @@ def perform(action='turtlebot3_waffle',basic_power=0.5,turn_power=0.5,max_dt=3):
     
     if(dt_counter<=max_dt):
         r += basic_r - penalty_deflection - penalty_distance + extreme
+        dt_counter += 1
     else:
         dt_counter = 0
         r = basic_r - penalty_deflection - penalty_distance + extreme
